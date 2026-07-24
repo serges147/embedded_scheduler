@@ -17,9 +17,17 @@
 
 #pragma once
 
+#ifndef OLGA_ASSERT
+#include <cassert>
+#define OLGA_ASSERT(x) assert(x)
+#endif
+
+#ifndef CAVL_ASSERT
+#define CAVL_ASSERT(x) OLGA_ASSERT(x)
+#endif
+
 #include <cavl.hpp>
 
-#include <cassert>
 #include <chrono>
 #include <concepts>
 #include <optional>
@@ -113,9 +121,9 @@ class Event : private cavl::Node<Event<TimePoint>>
     virtual ~Event()
     {
         cancel();
-        assert(deadline_ == TimePoint::min());
-        assert((this->getChildNode(false) == nullptr) && (this->getChildNode(true) == nullptr) &&
-               (this->getParentNode() == nullptr));
+        OLGA_ASSERT(deadline_ == TimePoint::min());
+        OLGA_ASSERT((this->getChildNode(false) == nullptr) && (this->getChildNode(true) == nullptr) &&
+                    (this->getParentNode() == nullptr));
     }
 
     Event(Event&& other) noexcept
@@ -138,8 +146,8 @@ class Event : private cavl::Node<Event<TimePoint>>
               return (dead >= other.deadline_) ? +1 : -1;
           },
           [this] { return this; });
-        assert(std::get<0>(ptr_existing) == this);
-        assert(!std::get<1>(ptr_existing));
+        OLGA_ASSERT(std::get<0>(ptr_existing) == this);
+        OLGA_ASSERT(!std::get<1>(ptr_existing));
         (void)ptr_existing;
     }
 
@@ -208,7 +216,7 @@ class EventLoop final
     ~EventLoop()
     {
         // If this fails, it means that some events have outlived the event loop, which is not permitted.
-        assert(isEmpty());
+        OLGA_ASSERT(isEmpty());
     }
 
     /// The provided handler will be invoked with the specified interval starting from (now + period);
@@ -239,7 +247,7 @@ class EventLoop final
             const duration period_;
             const Fun      handler_;
         };
-        assert(period > duration::zero());
+        OLGA_ASSERT(period > duration::zero());
         return Impl{ *this, period, std::forward<Fun>(handler) };
     }
 
@@ -274,7 +282,7 @@ class EventLoop final
             const duration min_period_;
             const Fun      handler_;
         };
-        assert(min_period > duration::zero());
+        OLGA_ASSERT(min_period > duration::zero());
         return Impl{ *this, min_period, std::forward<Fun>(handler) };
     }
 
@@ -345,8 +353,8 @@ class EventLoop final
             result.worst_lateness = std::max(result.worst_lateness, result.approx_now - deadline);
         }
 
-        assert(result.approx_now > time_point::min());
-        assert(result.worst_lateness >= duration::zero());
+        OLGA_ASSERT(result.approx_now > time_point::min());
+        OLGA_ASSERT(result.worst_lateness >= duration::zero());
         return result;
     }
 

@@ -19,9 +19,17 @@
 
 #pragma once
 
+#ifndef OLGA_ASSERT
+#include <assert.h>
+#define OLGA_ASSERT(x) assert(x)
+#endif
+
+#ifndef CAVL2_ASSERT
+#define CAVL2_ASSERT(x) OLGA_ASSERT(x)
+#endif
+
 #include <cavl2.h> // Add to your include paths: https://github.com/pavel-kirienko/cavl
 
-#include <assert.h>
 #include <stdint.h>
 
 #ifdef __cplusplus
@@ -79,8 +87,8 @@ typedef struct olga_spin_result_t
 /// The time units can be arbitrary.
 static inline void olga_init(olga_t* const self, void* const user, int64_t (*const now)(olga_t* sched))
 {
-    assert(self != NULL);
-    assert(now != NULL);
+    OLGA_ASSERT(self != NULL);
+    OLGA_ASSERT(now != NULL);
     self->events     = NULL;
     self->next_seqno = 0U;
     self->now        = now;
@@ -115,9 +123,9 @@ static inline void olga_defer(olga_t* const        self,
                               const olga_handler_t handler,
                               olga_event_t* const  out_event)
 {
-    assert(self != NULL);
-    assert(handler != NULL);
-    assert(out_event != NULL);
+    OLGA_ASSERT(self != NULL);
+    OLGA_ASSERT(handler != NULL);
+    OLGA_ASSERT(out_event != NULL);
     (void)cavl2_remove_if(&self->events, &out_event->base);
     out_event->deadline = deadline;
     out_event->seqno    = self->next_seqno++;
@@ -131,8 +139,8 @@ static inline void olga_defer(olga_t* const        self,
 /// The complexity is logarithmic in the number of pending events.
 static inline void olga_cancel(olga_t* const self, olga_event_t* const event)
 {
-    assert(self != NULL);
-    assert(event != NULL);
+    OLGA_ASSERT(self != NULL);
+    OLGA_ASSERT(event != NULL);
     (void)cavl2_remove_if(&self->events, &event->base);
     event->deadline = INT64_MIN;
 }
@@ -140,8 +148,8 @@ static inline void olga_cancel(olga_t* const self, olga_event_t* const event)
 /// True if the event is currently pending in the scheduler.
 static inline bool olga_is_pending(const olga_t* const self, const olga_event_t* const event)
 {
-    assert(self != NULL);
-    assert(event != NULL);
+    OLGA_ASSERT(self != NULL);
+    OLGA_ASSERT(event != NULL);
     return cavl2_is_inserted(self->events, &event->base);
 }
 
@@ -151,7 +159,7 @@ static inline bool olga_is_pending(const olga_t* const self, const olga_event_t*
 /// This method should be invoked regularly to pump the event loop.
 static inline olga_spin_result_t olga_spin(olga_t* const self)
 {
-    assert(self != NULL);
+    OLGA_ASSERT(self != NULL);
     olga_spin_result_t out = { .next_deadline = INT64_MAX, .worst_lateness = 0, .now = INT64_MIN };
     for (;;) { // GCOVR_EXCL_LINE
         olga_event_t* const event = (olga_event_t*)cavl2_min(self->events);
